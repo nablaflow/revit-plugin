@@ -30,11 +30,11 @@ namespace ArchiWindRevitAddIn
                 .SetImage("/ArchiWindRevitAddIn;component/Resources/Icons/RibbonIcon16.png")
                 .SetLargeImage("/ArchiWindRevitAddIn;component/Resources/Icons/RibbonIcon32.png");
 
-            var settingsPanel = Application.CreatePanel("Settings", TAB_NAME);
-
-            settingsPanel.AddPushButton<Commands.GeometriesSettings>("Geometries")
+            commandsPanel.AddPushButton<Commands.PreviewGeometries>("Preview")
                 .SetImage("/ArchiWindRevitAddIn;component/Resources/Icons/RibbonIcon16.png")
                 .SetLargeImage("/ArchiWindRevitAddIn;component/Resources/Icons/RibbonIcon32.png");
+
+            var settingsPanel = Application.CreatePanel("Settings", TAB_NAME);
 
             settingsPanel.AddPushButton<Commands.AccountSettings>("Account")
                 .SetImage("/ArchiWindRevitAddIn;component/Resources/Icons/RibbonIcon16.png")
