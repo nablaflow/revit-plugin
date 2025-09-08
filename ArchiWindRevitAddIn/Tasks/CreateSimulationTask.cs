@@ -1,11 +1,9 @@
 ﻿using ArchiwindRevitAddIn.Api;
 using ArchiwindRevitAddIn.Api.Models;
-using ArchiWindRevitAddIn.ExternalEventHandlers;
 using ArchiWindRevitAddIn.Models.Forms;
 using ArchiWindRevitAddIn.Services;
 using ArchiWindRevitAddIn.ViewModels;
 using ArchiWindRevitAddIn.Views;
-using Autodesk.Revit.UI;
 using System.IO;
 using GeometryPaths = (string? buildingPath, string? surroundingsPath, string? terrainPath, string? vegetationPath);
 
@@ -14,11 +12,9 @@ namespace ArchiWindRevitAddIn.Tasks
     public sealed class CreateSimulationTask
     {
         public static async Task<SimulationV1> Run(
-            CreateSimulationProgressViewModel progressViewModel,
+            ProgressViewModel progressViewModel,
             Document doc,
-            CreateSimulationForm parameters,
-            STLExportHandler stlExportHandler,
-            ExternalEvent stlExportEvent
+            CreateSimulationForm parameters
         )
         {
             var cancellationToken = progressViewModel.CancellationToken;
@@ -34,7 +30,7 @@ namespace ArchiWindRevitAddIn.Tasks
 
             using var tmpdir = TempDir.Create("archiwind_");
 
-            var geometryPaths = ExportStls(progressViewModel, doc, stlExportHandler, stlExportEvent, parameters, tmpdir.FullName, cancellationToken);
+            var geometryPaths = ExportStls(progressViewModel, doc, parameters, tmpdir.FullName, cancellationToken);
 
             var model = await CreateModel(apiClient, parameters, geometryPaths, cancellationToken);
 
@@ -46,15 +42,11 @@ namespace ArchiWindRevitAddIn.Tasks
             await UploadGeometries(progressViewModel, model, geometryPaths, cancellationToken);
             await FinaliseModel(progressViewModel, apiClient, modelId, cancellationToken);
 
-            var simulation = await CreateSimulation(progressViewModel, apiClient, modelId, parameters, cancellationToken);
-
-            dispatcher.Invoke(() => progressViewModel.SetCompleted(true, "Simulation created."));
-
-            return simulation;
+            return await CreateSimulation(progressViewModel, apiClient, modelId, parameters, cancellationToken);
         }
 
         private static async Task<SimulationV1> CreateSimulation(
-            CreateSimulationProgressViewModel progressViewModel,
+            ProgressViewModel progressViewModel,
             HttpClient apiClient,
             Guid modelId,
             CreateSimulationForm parameters,
@@ -131,10 +123,8 @@ namespace ArchiWindRevitAddIn.Tasks
         }
 
         private static GeometryPaths ExportStls(
-            CreateSimulationProgressViewModel progressViewModel,
+            ProgressViewModel progressViewModel,
             Document doc,
-            STLExportHandler stlExportHandler,
-            ExternalEvent stlExportEvent,
             CreateSimulationForm parameters,
             string tmpdir,
             CancellationToken cancellationToken
@@ -147,35 +137,33 @@ namespace ArchiWindRevitAddIn.Tasks
 
             if (parameters.HasBuilding)
             {
-                buildingPath = ExportGeometryToStl(progressViewModel, doc, Utils.BUILDING_VIEW, tmpdir, "building.stl", stlExportHandler, stlExportEvent, cancellationToken);
+                buildingPath = ExportGeometryToStl(progressViewModel, doc, Utils.BUILDING_VIEW, tmpdir, "building.stl", cancellationToken);
             }
 
             if (parameters.HasSurroundings)
             {
-                surroundingsPath = ExportGeometryToStl(progressViewModel, doc, Utils.SURROUNDINGS_VIEW, tmpdir, "surroundings.stl", stlExportHandler, stlExportEvent, cancellationToken);
+                surroundingsPath = ExportGeometryToStl(progressViewModel, doc, Utils.SURROUNDINGS_VIEW, tmpdir, "surroundings.stl", cancellationToken);
             }
 
             if (parameters.HasTerrain)
             {
-                terrainPath = ExportGeometryToStl(progressViewModel, doc, Utils.TERRAIN_VIEW, tmpdir, "terrain.stl", stlExportHandler, stlExportEvent, cancellationToken);
+                terrainPath = ExportGeometryToStl(progressViewModel, doc, Utils.TERRAIN_VIEW, tmpdir, "terrain.stl", cancellationToken);
             }
 
             if (parameters.HasVegetation)
             {
-                vegetationPath = ExportGeometryToStl(progressViewModel, doc, Utils.VEGETATION_VIEW, tmpdir, "vegetation.stl", stlExportHandler, stlExportEvent, cancellationToken);
+                vegetationPath = ExportGeometryToStl(progressViewModel, doc, Utils.VEGETATION_VIEW, tmpdir, "vegetation.stl", cancellationToken);
             }
 
             return (buildingPath, surroundingsPath, terrainPath, vegetationPath);
         }
 
-        private static string ExportGeometryToStl(
-            CreateSimulationProgressViewModel progressViewModel,
+        public static string ExportGeometryToStl(
+            ProgressViewModel progressViewModel,
             Document doc,
             string viewName,
             string tmpdir,
             string filename,
-            STLExportHandler stlExportHandler,
-            ExternalEvent stlExportEvent,
             CancellationToken cancellationToken
         )
         {
@@ -192,7 +180,7 @@ namespace ArchiWindRevitAddIn.Tasks
         }
 
         private static async Task UploadGeometries(
-            CreateSimulationProgressViewModel progressViewModel,
+            ProgressViewModel progressViewModel,
             ModelV1 model,
             GeometryPaths geometryPaths,
             CancellationToken cancellationToken
@@ -230,7 +218,7 @@ namespace ArchiWindRevitAddIn.Tasks
         }
 
         private static async Task UploadGeometry(
-            CreateSimulationProgressViewModel progressViewModel,
+            ProgressViewModel progressViewModel,
             System.Net.Http.HttpClient client,
             string path,
             string uploadUrl,
@@ -253,7 +241,7 @@ namespace ArchiWindRevitAddIn.Tasks
         }
 
         private static async Task FinaliseModel(
-            CreateSimulationProgressViewModel progressViewModel,
+            ProgressViewModel progressViewModel,
             HttpClient apiClient,
             Guid modelId,
             CancellationToken cancellationToken

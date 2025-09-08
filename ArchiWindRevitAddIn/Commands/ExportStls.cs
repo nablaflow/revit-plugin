@@ -1,8 +1,11 @@
-﻿using ArchiWindRevitAddIn.Views;
+﻿using ArchiWindRevitAddIn.Tasks;
+using ArchiWindRevitAddIn.ViewModels;
+using ArchiWindRevitAddIn.Views;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Microsoft.Win32;
 using Nice3point.Revit.Toolkit.External;
+using System.Windows.Threading;
 
 namespace ArchiWindRevitAddIn.Commands
 {
@@ -59,27 +62,46 @@ namespace ArchiWindRevitAddIn.Commands
             string dir = dialog.SelectedPath;
 #endif
 
+            ProgressViewModel? progressViewModel = null;
+            ProgressView? progressView = null;
+
+            var progressThread = new Thread(() =>
+            {
+                progressViewModel = new("STLs export progress");
+                progressView = new(progressViewModel);
+
+                progressView.Show();
+                progressView.Activate();
+
+                Dispatcher.Run();
+            });
+
+            progressThread.SetApartmentState(ApartmentState.STA);
+            progressThread.IsBackground = true;
+            progressThread.Start();
+
+            while (progressView == null || progressViewModel == null)
+            {
+                Thread.Sleep(10);
+            }
+
+            var dispatcher = progressViewModel.Dispatcher;
+            var cancellationToken = progressViewModel.CancellationToken;
+
             try
             {
-                Utils.ExportViewAsStl(Document, buildingView.Id, dir, "building.stl");
-                Utils.ExportViewAsStl(Document, surroundingsView.Id, dir, "surroundings.stl");
-                Utils.ExportViewAsStl(Document, terrainView.Id, dir, "terrain.stl");
-                Utils.ExportViewAsStl(Document, vegetationView.Id, dir, "vegetation.stl");
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.BUILDING_VIEW, dir, "building.stl", cancellationToken);
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.SURROUNDINGS_VIEW, dir, "surroundings.stl", cancellationToken);
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.TERRAIN_VIEW, dir, "terrain.stl", cancellationToken);
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.VEGETATION_VIEW, dir, "vegetation.stl", cancellationToken);
             }
             catch (Exception ex)
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Error",
-                                $"An error occured, please report to the developer: \n\n{ex.GetType()}\n{ex.Message}",
-                                TaskDialogCommonButtons.Ok,
-                                TaskDialogResult.Ok);
+                _ = dispatcher.BeginInvoke(() => progressViewModel.SetCompleted($"Error: {ex.GetType()}, {ex.Message}"));
                 return;
             }
 
-
-            Autodesk.Revit.UI.TaskDialog.Show("Done",
-                                $"STLs exported to {dir}.",
-                                TaskDialogCommonButtons.Ok,
-                                TaskDialogResult.Ok);
+            _ = dispatcher.BeginInvoke(() => progressViewModel.SetCompleted($"Finished."));
         }
     }
 }

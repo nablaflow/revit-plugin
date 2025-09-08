@@ -119,11 +119,14 @@ namespace ArchiWindRevitAddIn.Services
     {
         protected override async Task<System.Net.Http.HttpResponseMessage> SendAsync(System.Net.Http.HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
 
             if (request.Method == System.Net.Http.HttpMethod.Post)
             {
-                request.Headers.Add("idempotency-key", new Guid().ToString());
+                request.Headers.Add("idempotency-key", Guid.NewGuid().ToString());
             }
 
             return await base.SendAsync(request, cancellationToken);

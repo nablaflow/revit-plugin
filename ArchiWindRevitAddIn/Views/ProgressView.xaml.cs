@@ -5,21 +5,22 @@ using MessageBox = System.Windows.MessageBox;
 
 namespace ArchiWindRevitAddIn.Views
 {
-    public partial class CreateSimulationProgressView : Window
+    public sealed partial class ProgressView : Window
     {
-        public CreateSimulationProgressViewModel ViewModel { get; private set; }
+        public ProgressViewModel ViewModel { get; private set; }
 
-        public CreateSimulationProgressView(CreateSimulationProgressViewModel viewModel)
+        public ProgressView(ProgressViewModel viewModel)
         {
             ViewModel = viewModel;
             DataContext = viewModel;
+
             InitializeComponent();
 
             viewModel.CloseCommand = new RelayCommand(() =>
             {
                 DialogResult = viewModel.IsCompleted;
                 Close();
-            });
+            }, () => viewModel.IsCompleted);
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -27,7 +28,7 @@ namespace ArchiWindRevitAddIn.Views
             if (!ViewModel.IsCompleted && ViewModel.CanCancel)
             {
                 var result = MessageBox.Show(
-                    "Simulation creation is still in progress. Do you want to cancel it?",
+                    "The process is still in progress. Do you want to cancel it?",
                     "Confirm Close",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);

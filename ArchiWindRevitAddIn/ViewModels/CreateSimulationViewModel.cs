@@ -1,17 +1,19 @@
 ﻿using ArchiwindRevitAddIn.Api.Models;
-using ArchiWindRevitAddIn.ExternalEventHandlers;
 using ArchiWindRevitAddIn.Models;
 using ArchiWindRevitAddIn.Models.Forms;
 using ArchiWindRevitAddIn.Models.Validators;
 using ArchiWindRevitAddIn.Services;
+using ArchiWindRevitAddIn.Tasks;
 using ArchiWindRevitAddIn.Views;
 using Autodesk.Revit.UI;
 using FluentValidation;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Cursors = System.Windows.Input.Cursors;
 
 namespace ArchiWindRevitAddIn.ViewModels
@@ -90,19 +92,15 @@ namespace ArchiWindRevitAddIn.ViewModels
 
         public ObservableCollection<int> RefSystems { get; } = [];
 
-        public RelayCommand CreateCommand { get; set; }
-        public RelayCommand LoadCoordinatesFromDocument { get; set; }
-        public RelayCommand ClearRefSystem { get; set; }
-        public RelayCommand DoUpdateGeometriesControls { get; set; }
-
-        public AsyncRelayCommand LoadProjects { get; set; }
+        public AsyncRelayCommand CreateCommand { get; private set; }
+        public RelayCommand LoadCoordinatesFromDocument { get; private set; }
+        public RelayCommand ClearRefSystem { get; private set; }
+        public RelayCommand DoUpdateGeometriesControls { get; private set; }
+        public AsyncRelayCommand LoadProjects { get; private set; }
 
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
         private Document Document { get; set; }
-
-        private readonly STLExportHandler stlExportHandler = new();
-        private readonly ExternalEvent stlExportEvent;
 
         public CreateSimulationViewModel(Document document)
         {
@@ -116,8 +114,6 @@ namespace ArchiWindRevitAddIn.ViewModels
             Name = document.Title;
 
             RefSystems = new(Epsg.Values);
-
-            stlExportEvent = ExternalEvent.Create(stlExportHandler);
         }
 
         private bool CanCreate()
@@ -125,7 +121,7 @@ namespace ArchiWindRevitAddIn.ViewModels
             return !HasErrors;
         }
 
-        private void Create()
+        private async Task Create()
         {
             ValidateAllProperties();
 
@@ -134,10 +130,60 @@ namespace ArchiWindRevitAddIn.ViewModels
                 return;
             }
 
-            var progressViewModel = new CreateSimulationProgressViewModel(Document, simParams, stlExportHandler, stlExportEvent);
-            var progressWindow = new CreateSimulationProgressView(progressViewModel);
+            ProgressViewModel? progressViewModel = null;
+            ProgressView? progressView = null;
 
-            progressWindow.ShowDialog();
+            var progressThread = new Thread(() =>
+            {
+                progressViewModel = new("Simulation creation progress");
+                progressView = new(progressViewModel);
+
+                progressView.Show();
+                progressView.Activate();
+
+                Dispatcher.Run();
+            });
+
+            progressThread.SetApartmentState(ApartmentState.STA);
+            progressThread.IsBackground = true;
+            progressThread.Start();
+
+            while (progressView == null || progressViewModel == null)
+            {
+                Thread.Sleep(10);
+            }
+
+            var dispatcher = progressViewModel.Dispatcher;
+
+            try
+            {
+                var createdSimulation = await CreateSimulationTask.Run(progressViewModel, Document, simParams);
+
+                if (createdSimulation is null)
+                {
+                    await dispatcher.BeginInvoke(() => progressViewModel.SetCompleted($"Error: no simulation was returned"));
+
+                    return;
+                }
+
+                await dispatcher.BeginInvoke(() => progressViewModel.SetCompleted("Simulation created."));
+
+                OpenSimulationInBrowser(createdSimulation);
+
+                await dispatcher.BeginInvoke(() => progressView.Close());
+            }
+            catch (JsonErrorResponse ex)
+            {
+                await dispatcher.BeginInvoke(() => progressViewModel.SetCompleted($"Server error: {ex.Message}"));
+            }
+            catch (OperationCanceledException)
+            {
+                await dispatcher.BeginInvoke(() => progressViewModel.SetCompleted("Operation was cancelled."));
+            }
+            catch (Exception ex)
+            {
+                await dispatcher.BeginInvoke(() => progressViewModel.SetCompleted($"Error: {ex.GetType()}, {ex.Message}"));
+            }
         }
 
         private async Task PerformLoadProjects()
@@ -305,12 +351,14 @@ namespace ArchiWindRevitAddIn.ViewModels
 
             foreach (var error in results.Errors)
             {
-                if (!errors.ContainsKey(error.PropertyName))
+                if (!errors.TryGetValue(error.PropertyName, out List<string>? value))
                 {
-                    errors[error.PropertyName] = new List<string>();
+                    value = [];
+
+                    errors[error.PropertyName] = value;
                 }
 
-                errors[error.PropertyName].Add(error.ErrorMessage);
+                value.Add(error.ErrorMessage);
 
                 ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(error.PropertyName));
             }
@@ -405,6 +453,22 @@ namespace ArchiWindRevitAddIn.ViewModels
             isEnabled(true);
             hasGeometry(true);
             status($"{elementsInView} element{(elementsInView > 1 ? "s" : "")}");
+        }
+
+        private static void OpenSimulationInBrowser(SimulationV1 sim)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = sim.BrowserUrl!,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Error", $"Cannot open URL to simulation: {ex.Message}", TaskDialogCommonButtons.Ok, TaskDialogResult.Ok);
+            }
         }
     }
 }
