@@ -1,3 +1,8 @@
+# 1.0.0-rc.3
+
+- Fixed elements counts in views.
+- Graceful handling of empty STLs on export.
+
 # 1.0.0-rc.2
 
 - Replaced generic installer images with branded ones.
