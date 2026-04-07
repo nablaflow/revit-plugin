@@ -19,9 +19,10 @@ namespace ArchiWindRevitAddIn.Commands
 
         public override void Execute()
         {
-            Document doc = ActiveView.Document;
+            var activeView = Application.ActiveUIDocument.ActiveView;
+            Document doc = activeView.Document;
 
-            if (ActiveView.ViewType != ViewType.ThreeD || viewNames.Contains(ActiveView.Name))
+            if (activeView.ViewType != ViewType.ThreeD || viewNames.Contains(activeView.Name))
             {
                 TaskDialog.Show("Error",
                                 $"Please select the document's 3D view.",
@@ -39,10 +40,10 @@ namespace ArchiWindRevitAddIn.Commands
             {
                 t.Start();
 
-                var buildingView = Utils.CreateView(doc, ActiveView, Utils.BUILDING_VIEW);
-                var surroundingsView = Utils.CreateView(doc, ActiveView, Utils.SURROUNDINGS_VIEW);
-                var vegetationView = Utils.CreateView(doc, ActiveView, Utils.VEGETATION_VIEW);
-                var terrainView = Utils.CreateView(doc, ActiveView, Utils.TERRAIN_VIEW);
+                var buildingView = Utils.CreateView(doc, activeView, Utils.BUILDING_VIEW);
+                var surroundingsView = Utils.CreateView(doc, activeView, Utils.SURROUNDINGS_VIEW);
+                var vegetationView = Utils.CreateView(doc, activeView, Utils.VEGETATION_VIEW);
+                var terrainView = Utils.CreateView(doc, activeView, Utils.TERRAIN_VIEW);
 
                 Utils.OnlyShowCategories(doc, buildingView, Models.Categories.DefaultBuildingCategories);
                 Utils.OnlyShowCategories(doc, surroundingsView, Models.Categories.DefaultSurroundingsCategories);
@@ -51,10 +52,10 @@ namespace ArchiWindRevitAddIn.Commands
 
                 t.Commit();
 
-                UiDocument.RequestViewChange(buildingView);
-                UiDocument.RequestViewChange(surroundingsView);
-                UiDocument.RequestViewChange(vegetationView);
-                UiDocument.RequestViewChange(terrainView);
+                Application.ActiveUIDocument.RequestViewChange(buildingView);
+                Application.ActiveUIDocument.RequestViewChange(surroundingsView);
+                Application.ActiveUIDocument.RequestViewChange(vegetationView);
+                Application.ActiveUIDocument.RequestViewChange(terrainView);
 
                 TaskDialog.Show("Success",
                     $"Views created.\nYou can now customise them with what should be visibile and be used for export.",

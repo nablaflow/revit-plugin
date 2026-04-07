@@ -10,7 +10,7 @@ namespace ArchiWindRevitAddIn.Commands
     {
         public override void Execute()
         {
-            var viewModel = new CreateSimulationViewModel(Document);
+            var viewModel = new CreateSimulationViewModel(Application.ActiveUIDocument.Document);
             var view = new CreateSimulationView(viewModel);
             view.ShowDialog();
         }

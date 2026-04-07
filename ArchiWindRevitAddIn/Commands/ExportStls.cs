@@ -14,10 +14,10 @@ namespace ArchiWindRevitAddIn.Commands
     {
         public override void Execute()
         {
-            var buildingView = Utils.FindView(Document, Utils.BUILDING_VIEW);
-            var surroundingsView = Utils.FindView(Document, Utils.SURROUNDINGS_VIEW);
-            var terrainView = Utils.FindView(Document, Utils.TERRAIN_VIEW);
-            var vegetationView = Utils.FindView(Document, Utils.VEGETATION_VIEW);
+            var buildingView = Utils.FindView(Application.ActiveUIDocument.Document, Utils.BUILDING_VIEW);
+            var surroundingsView = Utils.FindView(Application.ActiveUIDocument.Document, Utils.SURROUNDINGS_VIEW);
+            var terrainView = Utils.FindView(Application.ActiveUIDocument.Document, Utils.TERRAIN_VIEW);
+            var vegetationView = Utils.FindView(Application.ActiveUIDocument.Document, Utils.VEGETATION_VIEW);
 
             if (buildingView is null || surroundingsView is null || terrainView is null || vegetationView is null)
             {
@@ -90,10 +90,10 @@ namespace ArchiWindRevitAddIn.Commands
 
             try
             {
-                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.BUILDING_VIEW, dir, "building.stl", cancellationToken);
-                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.SURROUNDINGS_VIEW, dir, "surroundings.stl", cancellationToken);
-                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.TERRAIN_VIEW, dir, "terrain.stl", cancellationToken);
-                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Document, Utils.VEGETATION_VIEW, dir, "vegetation.stl", cancellationToken);
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Application.ActiveUIDocument.Document, Utils.BUILDING_VIEW, dir, "building.stl", cancellationToken);
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Application.ActiveUIDocument.Document, Utils.SURROUNDINGS_VIEW, dir, "surroundings.stl", cancellationToken);
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Application.ActiveUIDocument.Document, Utils.TERRAIN_VIEW, dir, "terrain.stl", cancellationToken);
+                CreateSimulationTask.ExportGeometryToStl(progressViewModel, Application.ActiveUIDocument.Document, Utils.VEGETATION_VIEW, dir, "vegetation.stl", cancellationToken);
             }
             catch (Exception ex)
             {
