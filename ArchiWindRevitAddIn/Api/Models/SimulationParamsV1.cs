@@ -24,6 +24,8 @@ namespace ArchiwindRevitAddIn.Api.Models
 #endif
         /// <summary>The model_id property</summary>
         public Guid? ModelId { get; set; }
+        /// <summary>in meters</summary>
+        public double? Radius { get; set; }
         /// <summary>read more [here](https://en.wikipedia.org/wiki/EPSG_Geodetic_Parameter_Dataset)</summary>
         public int? RefSystem { get; set; }
         /// <summary>The wind_directions property</summary>
@@ -42,7 +44,7 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
         public static global::ArchiwindRevitAddIn.Api.Models.SimulationParamsV1 CreateFromDiscriminatorValue(IParseNode parseNode)
         {
-            _ = parseNode ?? throw new ArgumentNullException(nameof(parseNode));
+            if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
             return new global::ArchiwindRevitAddIn.Api.Models.SimulationParamsV1();
         }
         /// <summary>
@@ -55,6 +57,7 @@ namespace ArchiwindRevitAddIn.Api.Models
             {
                 { "coords", n => { Coords = n.GetObjectValue<global::ArchiwindRevitAddIn.Api.Models.Coordinates>(global::ArchiwindRevitAddIn.Api.Models.Coordinates.CreateFromDiscriminatorValue); } },
                 { "model_id", n => { ModelId = n.GetGuidValue(); } },
+                { "radius", n => { Radius = n.GetDoubleValue(); } },
                 { "ref_system", n => { RefSystem = n.GetIntValue(); } },
                 { "wind_directions", n => { WindDirections = n.GetIntValue(); } },
             };
@@ -65,9 +68,10 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="writer">Serialization writer to use to serialize this model</param>
         public virtual void Serialize(ISerializationWriter writer)
         {
-            _ = writer ?? throw new ArgumentNullException(nameof(writer));
+            if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteObjectValue<global::ArchiwindRevitAddIn.Api.Models.Coordinates>("coords", Coords);
             writer.WriteGuidValue("model_id", ModelId);
+            writer.WriteDoubleValue("radius", Radius);
             writer.WriteIntValue("ref_system", RefSystem);
             writer.WriteIntValue("wind_directions", WindDirections);
             writer.WriteAdditionalData(AdditionalData);

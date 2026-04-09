@@ -43,6 +43,16 @@ namespace ArchiwindRevitAddIn.Api.Models
 #else
         public global::ArchiwindRevitAddIn.Api.Models.SimulationResultsV1_attachments_report Report { get; set; }
 #endif
+        /// <summary>The sampled_probes_expires_on property</summary>
+        public Date? SampledProbesExpiresOn { get; set; }
+        /// <summary>The sampled_probes_url property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? SampledProbesUrl { get; set; }
+#nullable restore
+#else
+        public string SampledProbesUrl { get; set; }
+#endif
         /// <summary>
         /// Instantiates a new <see cref="global::ArchiwindRevitAddIn.Api.Models.SimulationResultsV1_attachments"/> and sets the default values.
         /// </summary>
@@ -57,7 +67,7 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
         public static global::ArchiwindRevitAddIn.Api.Models.SimulationResultsV1_attachments CreateFromDiscriminatorValue(IParseNode parseNode)
         {
-            _ = parseNode ?? throw new ArgumentNullException(nameof(parseNode));
+            if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
             return new global::ArchiwindRevitAddIn.Api.Models.SimulationResultsV1_attachments();
         }
         /// <summary>
@@ -73,6 +83,8 @@ namespace ArchiwindRevitAddIn.Api.Models
                 { "raw_data_expires_on", n => { RawDataExpiresOn = n.GetDateValue(); } },
                 { "raw_data_url", n => { RawDataUrl = n.GetStringValue(); } },
                 { "report", n => { Report = n.GetObjectValue<global::ArchiwindRevitAddIn.Api.Models.SimulationResultsV1_attachments_report>(global::ArchiwindRevitAddIn.Api.Models.SimulationResultsV1_attachments_report.CreateFromDiscriminatorValue); } },
+                { "sampled_probes_expires_on", n => { SampledProbesExpiresOn = n.GetDateValue(); } },
+                { "sampled_probes_url", n => { SampledProbesUrl = n.GetStringValue(); } },
             };
         }
         /// <summary>
@@ -81,12 +93,14 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="writer">Serialization writer to use to serialize this model</param>
         public virtual void Serialize(ISerializationWriter writer)
         {
-            _ = writer ?? throw new ArgumentNullException(nameof(writer));
+            if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteDateValue("processed_images_expire_on", ProcessedImagesExpireOn);
             writer.WriteStringValue("processed_images_url", ProcessedImagesUrl);
             writer.WriteDateValue("raw_data_expires_on", RawDataExpiresOn);
             writer.WriteStringValue("raw_data_url", RawDataUrl);
             writer.WriteObjectValue<global::ArchiwindRevitAddIn.Api.Models.SimulationResultsV1_attachments_report>("report", Report);
+            writer.WriteDateValue("sampled_probes_expires_on", SampledProbesExpiresOn);
+            writer.WriteStringValue("sampled_probes_url", SampledProbesUrl);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

@@ -46,6 +46,8 @@ namespace ArchiwindRevitAddIn.Api.Models
         public global::ArchiwindRevitAddIn.Api.Models.ProjectStatus? Status { get; set; }
         /// <summary>The updated_at property</summary>
         public DateTimeOffset? UpdatedAt { get; set; }
+        /// <summary>The wind_criteria property</summary>
+        public global::ArchiwindRevitAddIn.Api.Models.WindCriteria? WindCriteria { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::ArchiwindRevitAddIn.Api.Models.ProjectV1"/> and sets the default values.
         /// </summary>
@@ -60,7 +62,7 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
         public static global::ArchiwindRevitAddIn.Api.Models.ProjectV1 CreateFromDiscriminatorValue(IParseNode parseNode)
         {
-            _ = parseNode ?? throw new ArgumentNullException(nameof(parseNode));
+            if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
             return new global::ArchiwindRevitAddIn.Api.Models.ProjectV1();
         }
         /// <summary>
@@ -78,6 +80,7 @@ namespace ArchiwindRevitAddIn.Api.Models
                 { "name", n => { Name = n.GetStringValue(); } },
                 { "status", n => { Status = n.GetEnumValue<global::ArchiwindRevitAddIn.Api.Models.ProjectStatus>(); } },
                 { "updated_at", n => { UpdatedAt = n.GetDateTimeOffsetValue(); } },
+                { "wind_criteria", n => { WindCriteria = n.GetEnumValue<global::ArchiwindRevitAddIn.Api.Models.WindCriteria>(); } },
             };
         }
         /// <summary>
@@ -86,7 +89,7 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="writer">Serialization writer to use to serialize this model</param>
         public virtual void Serialize(ISerializationWriter writer)
         {
-            _ = writer ?? throw new ArgumentNullException(nameof(writer));
+            if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("browser_url", BrowserUrl);
             writer.WriteDateTimeOffsetValue("created_at", CreatedAt);
             writer.WriteStringValue("description", Description);
@@ -94,6 +97,7 @@ namespace ArchiwindRevitAddIn.Api.Models
             writer.WriteStringValue("name", Name);
             writer.WriteEnumValue<global::ArchiwindRevitAddIn.Api.Models.ProjectStatus>("status", Status);
             writer.WriteDateTimeOffsetValue("updated_at", UpdatedAt);
+            writer.WriteEnumValue<global::ArchiwindRevitAddIn.Api.Models.WindCriteria>("wind_criteria", WindCriteria);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

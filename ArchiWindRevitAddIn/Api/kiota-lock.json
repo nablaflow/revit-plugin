@@ -1,8 +1,8 @@
 {
-  "descriptionHash": "A8F36C57BE51EBE1397633FE4C2221C2FC07C47F59F09EB67E17A6D3D204C9EED104C479AF32E1C227B01AE45D6AB9E266AF9BD8E55126606121F96233569D84",
+  "descriptionHash": "6932B5DDB8F1C2997C7CB6E9FF9358B2230CF028E96AE1E0C271B658ED576EE48AAE111C60A72A605D3128ADFDB24599A687F3196901CCBAE56CDBAB610365EA",
   "descriptionLocation": "https://api.nablaflow.io/archiwind/openapi",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.28.0",
+  "kiotaVersion": "1.30.0",
   "clientClassName": "HttpClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "ArchiwindRevitAddIn.Api",

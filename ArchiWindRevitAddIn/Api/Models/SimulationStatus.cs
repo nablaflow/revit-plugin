@@ -12,10 +12,6 @@ namespace ArchiwindRevitAddIn.Api.Models
         #pragma warning disable CS1591
         Progress,
         #pragma warning restore CS1591
-        [EnumMember(Value = "quality_check")]
-        #pragma warning disable CS1591
-        Quality_check,
-        #pragma warning restore CS1591
         [EnumMember(Value = "success")]
         #pragma warning disable CS1591
         Success,
@@ -23,6 +19,10 @@ namespace ArchiwindRevitAddIn.Api.Models
         [EnumMember(Value = "expired")]
         #pragma warning disable CS1591
         Expired,
+        #pragma warning restore CS1591
+        [EnumMember(Value = "draft")]
+        #pragma warning disable CS1591
+        Draft,
         #pragma warning restore CS1591
     }
 }

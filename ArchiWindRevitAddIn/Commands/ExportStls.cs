@@ -3,7 +3,11 @@ using ArchiWindRevitAddIn.ViewModels;
 using ArchiWindRevitAddIn.Views;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
+#if REVIT2025_OR_GREATER
 using Microsoft.Win32;
+#else
+using System.Windows.Forms;
+#endif
 using Nice3point.Revit.Toolkit.External;
 using System.Windows.Threading;
 

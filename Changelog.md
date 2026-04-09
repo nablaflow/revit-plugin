@@ -1,3 +1,9 @@
+# Unreleased
+
+- Added support for Revit 2027.
+- Upgraded Nice3point.Revit.Sdk to 6.2.1
+- Upgraded various dependencies.
+
 # 1.0.0-rc.7
 
 - Added F1 links to docs.nablaflow.io to Ribbon tooltips.

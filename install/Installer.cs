@@ -1,13 +1,12 @@
 ﻿using Installer;
-using System;
 using WixSharp;
 using WixSharp.CommonTasks;
 using WixSharp.Controls;
-using Assembly = System.Reflection.Assembly;
 
 const string outputName = "NablaFlow.ArchiWind";
 const string projectName = "ArchiWind Revit Add-In";
 
+var versioning = Versioning.CreateFromVersionStringAsync(args[0]);
 var project = new Project
 {
     OutDir = "output",
@@ -18,7 +17,7 @@ var project = new Project
     GUID = new Guid("2814AB61-02F9-433C-BFB2-2CAD4B882889"),
     BannerImage = @"install\Resources\Icons\BannerImage.png",
     BackgroundImage = @"install\Resources\Icons\BackgroundImage.png",
-    Version = Assembly.GetExecutingAssembly().GetName().Version.ClearRevision(),
+    Version = versioning.VersionPrefix,
     ControlPanelInfo =
     {
         Manufacturer = Environment.UserName,
@@ -26,7 +25,7 @@ var project = new Project
     }
 };
 
-var wixEntities = Generator.GenerateWixEntities(args);
+var wixEntities = Generator.GenerateWixEntities(args[1..]);
 project.RemoveDialogsBetween(NativeDialogs.WelcomeDlg, NativeDialogs.CustomizeDlg);
 
 BuildSingleUserMsi();
@@ -34,8 +33,8 @@ BuildMultiUserUserMsi();
 
 void BuildSingleUserMsi()
 {
-    project.InstallScope = InstallScope.perUser;
-    project.OutFileName = $"{outputName}-{project.Version}-SingleUser";
+    project.Scope = InstallScope.perUser;
+    project.OutFileName = $"{outputName}-{versioning.Version}-SingleUser";
     project.Dirs =
     [
         new InstallDir(@"%AppDataFolder%\Autodesk\Revit\Addins\", wixEntities)
@@ -45,11 +44,11 @@ void BuildSingleUserMsi()
 
 void BuildMultiUserUserMsi()
 {
-    project.InstallScope = InstallScope.perMachine;
-    project.OutFileName = $"{outputName}-{project.Version}-MultiUser";
+    project.Scope = InstallScope.perMachine;
+    project.OutFileName = $"{outputName}-{versioning.Version}-MultiUser";
     project.Dirs =
     [
-        new InstallDir(@"%CommonAppDataFolder%\Autodesk\Revit\Addins\", wixEntities)
+        new InstallDir(versioning.VersionPrefix.Major >= 2027 ? @"%ProgramFiles%\Autodesk\Revit\Addins" : @"%CommonAppDataFolder%\Autodesk\Revit\Addins", wixEntities)
     ];
     project.BuildMsi();
 }

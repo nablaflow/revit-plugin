@@ -30,6 +30,8 @@ namespace ArchiwindRevitAddIn.Api.Models
 #else
         public string Name { get; set; }
 #endif
+        /// <summary>The wind_criteria property</summary>
+        public global::ArchiwindRevitAddIn.Api.Models.WindCriteria? WindCriteria { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::ArchiwindRevitAddIn.Api.Models.CreateProjectV1Params"/> and sets the default values.
         /// </summary>
@@ -44,7 +46,7 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
         public static global::ArchiwindRevitAddIn.Api.Models.CreateProjectV1Params CreateFromDiscriminatorValue(IParseNode parseNode)
         {
-            _ = parseNode ?? throw new ArgumentNullException(nameof(parseNode));
+            if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
             return new global::ArchiwindRevitAddIn.Api.Models.CreateProjectV1Params();
         }
         /// <summary>
@@ -57,6 +59,7 @@ namespace ArchiwindRevitAddIn.Api.Models
             {
                 { "description", n => { Description = n.GetStringValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
+                { "wind_criteria", n => { WindCriteria = n.GetEnumValue<global::ArchiwindRevitAddIn.Api.Models.WindCriteria>(); } },
             };
         }
         /// <summary>
@@ -65,9 +68,10 @@ namespace ArchiwindRevitAddIn.Api.Models
         /// <param name="writer">Serialization writer to use to serialize this model</param>
         public virtual void Serialize(ISerializationWriter writer)
         {
-            _ = writer ?? throw new ArgumentNullException(nameof(writer));
+            if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("description", Description);
             writer.WriteStringValue("name", Name);
+            writer.WriteEnumValue<global::ArchiwindRevitAddIn.Api.Models.WindCriteria>("wind_criteria", WindCriteria);
             writer.WriteAdditionalData(AdditionalData);
         }
     }
