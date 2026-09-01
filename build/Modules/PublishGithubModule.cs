@@ -22,6 +22,7 @@ namespace Build.Modules;
 [DependsOn<GenerateGitHubChangelogModule>]
 [DependsOn<CreateBundleModule>(Optional = true)]
 [DependsOn<CreateInstallerModule>(Optional = true)]
+[DependsOn<SignInstallersModule>(Optional = true)]
 public sealed class PublishGithubModule(IOptions<BuildOptions> buildOptions) : Module
 {
     protected override async Task ExecuteModuleAsync(IModuleContext context, CancellationToken cancellationToken)

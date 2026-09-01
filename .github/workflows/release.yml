@@ -11,11 +11,17 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+  id-token: write
+
 jobs:
   release:
     name: release
 
     runs-on: windows-2025
+
+    environment: release
 
     steps:
       - uses: actions/checkout@v7
@@ -36,9 +42,20 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'Directory.Packages.props') }}
           restore-keys: ${{ runner.os }}-nuget-
 
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - run: dotnet run -c Release -- pack publish
         working-directory: "build"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOTNET_ENVIRONMENT: ${{ (github.ref_name == 'main' || github.ref_type == 'tag') && 'Production' || 'Development' }}
+          DOTNET_ENVIRONMENT: ${{ (github.ref_name == 'master' || github.ref_type == 'tag') && 'Production' || 'Development' }}
           Publish__Version: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
+          Sign__Enabled: 'true'
+          Sign__Endpoint: ${{ secrets.SIGN_ENDPOINT }}
+          Sign__Account: ${{ secrets.SIGN_ACCOUNT }}
+          Sign__CertificateProfile: ${{ secrets.SIGN_CERTIFICATE_PROFILE }}

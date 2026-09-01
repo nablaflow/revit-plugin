@@ -1,3 +1,8 @@
+# Unreleased
+
+- Added codesign.
+- Updated several dependencies.
+
 # 1.0.0
 
 - Fixed an issue when user has no active projects.

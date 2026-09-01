@@ -20,7 +20,7 @@ var project = new Project
     Version = versioning.VersionPrefix,
     ControlPanelInfo =
     {
-        Manufacturer = Environment.UserName,
+        Manufacturer = "NablaFlow AS",
         ProductIcon = @"install\Resources\Icons\icon.ico"
     }
 };

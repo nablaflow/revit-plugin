@@ -11,6 +11,9 @@ Autodesk Revit plugin project organized into multiple solution files that target
 * [Updating the API schema](#updating-api-schema)
 * [Building](#building)
   * [Building the MSI installer and the Autodesk bundle on local machine](#building-the-msi-installer-and-the-autodesk-bundle-on-local-machine)
+* [Code signing](#code-signing)
+  * [Signing locally](#signing-locally)
+  * [Signing on CI](#signing-on-ci)
 * [Publishing Releases](#publishing-releases)
   * [Creating a new Release from the JetBrains Rider](#creating-a-new-release-from-the-jetbrains-rider)
   * [Creating a new Release from the Terminal](#creating-a-new-release-from-the-terminal)
@@ -105,6 +108,76 @@ To execute your ModularPipelines build locally, you can follow these steps:
    ```
 
    This command will execute the ModularPipelines build defined in your project.
+
+## Code signing
+
+Release artifacts are signed with [Azure Artifact Signing](https://learn.microsoft.com/en-us/azure/artifact-signing/overview)
+(formerly Trusted Signing). The `pack` pipeline signs `ArchiWindRevitAddIn.dll` in every publish directory
+before packaging, then signs both `.msi` installers once WiX has produced them. The `.bundle` archive is not
+itself signable, so it inherits the signed assemblies.
+
+Signing is **off by default** and configured entirely through the `Sign` configuration section, which means
+every value is settable as a `Sign__<Name>` environment variable:
+
+| Variable | Description |
+|---|---|
+| `Sign__Enabled` | `true` to sign. Anything else skips signing and the build proceeds unsigned. |
+| `Sign__Endpoint` | The Artifact Signing account URI, e.g. `https://weu.codesigning.azure.net/` |
+| `Sign__Account` | The Artifact Signing account name |
+| `Sign__CertificateProfile` | The certificate profile to sign with |
+| `Sign__CredentialType` | Azure credential used by the `sign` tool. Defaults to `azure-cli` |
+| `Sign__TimestampUrl` | RFC3161 timestamp service. Defaults to `http://timestamp.acs.microsoft.com` |
+| `Sign__ToolVersion` | Pins the `sign` dotnet tool version. Latest prerelease when empty |
+
+Artifact Signing certificates are short lived, so timestamping is mandatory — an untimestamped signature stops
+verifying within a day.
+
+### Signing locally
+
+Signing requires Windows. Use a **Public Trust Test** certificate profile for the inner dev loop: those
+signatures are deliberately not publicly trusted and are not distributable.
+
+```powershell
+az config set core.enable_broker_on_windows=false
+az login
+
+$env:Sign__Enabled = 'true'
+$env:Sign__Endpoint = 'https://weu.codesigning.azure.net/'
+$env:Sign__Account = '<artifact-signing-account>'
+$env:Sign__CertificateProfile = '<public-trust-test-profile>'
+
+cd build; dotnet run -- pack
+```
+
+Values that do not change between runs can go into user secrets instead of the environment:
+
+```shell
+cd build; dotnet user-secrets set "Sign:Account" "<artifact-signing-account>"
+```
+
+Verify the result with:
+
+```powershell
+signtool verify /pa /v output\NablaFlow.ArchiWind-<version>-SingleUser.msi
+```
+
+With a test profile this reports an **untrusted root**, which is the expected outcome: what it confirms is that
+a signature and a timestamp are present. `Get-AuthenticodeSignature <file> | Format-List *` shows both.
+
+### Signing on CI
+
+`release.yml` authenticates with an Azure federated (OIDC) credential, so no client secret is stored in GitHub.
+It requires:
+
+* A GitHub environment named `release`, matching the federated credential subject
+  `repo:<org>/revit-plugin:environment:release`. Tag-triggered workflows cannot use a wildcard `refs/tags/*`
+  subject, which is why the environment exists.
+* Repository (or environment) variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
+  `SIGN_ENDPOINT`, `SIGN_ACCOUNT`, `SIGN_CERTIFICATE_PROFILE`. None of these are secret.
+* The app registration, and for local signing your own Azure user, holding the
+  *Artifact Signing Certificate Profile Signer* role on the signing account.
+
+`build.yml` is intentionally left unsigned so pull requests, including those from forks, need no Azure access.
 
 ## Publishing Releases
 
